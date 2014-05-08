@@ -1,7 +1,7 @@
 var through = require('through2'), gutil = require('gulp-util'), util = require('util'), gulp = require('gulp');
 
 
-var When = require('./lib/when');
+var Rhythm = require('./lib/rhythm');
 
 
 module.exports = function(options, _cb) {
@@ -18,7 +18,7 @@ module.exports = function(options, _cb) {
 			self.push(file);
 		};
 
-		var when = new When(options).on('tick', function() {
+		new Rhythm(options).on('tick', function() {
 			var dest = file.clone();
 			push(dest);
 		}).on('end', function() {
@@ -29,13 +29,17 @@ module.exports = function(options, _cb) {
 	});
 };
 
+var isFunction = function(obj){
+    return obj&&typeof (obj) == 'function';
+}
+
 module.exports.task = module.exports.tasks = function(tasks) {
 	var keys = Object.keys(tasks);
 	
 	for ( var i = 0, key; key = keys[i++];) {
 		var options = tasks[key];//per task options 	
 		// normalize
-		if (typeof options == 'string' || options instanceof String||util.isArray(options)) {
+		if (typeof options == 'string' || options instanceof String||util.isArray(options)||isFunction(options)) {
 			options = {
 				task : options
 			};
@@ -45,12 +49,12 @@ module.exports.task = module.exports.tasks = function(tasks) {
 		options.query = key;
 		// end normalize
 		
-		var toTask = (typeof (options.task) == 'function') ? options.task : function() {
+		var toTask = isFunction(options.task) ? options.task : function() {
 			gulp.start(options.task);
 		};
-		
-		var when = new When(options).on('tick', function() {			
-			console.log("Tick");
+
+		new Rhythm(options).on('tick', function() {
+
 			toTask();
 		});
 
